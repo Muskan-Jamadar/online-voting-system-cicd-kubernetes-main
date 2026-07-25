@@ -3,7 +3,7 @@ kind: Deployment
 
 metadata:
   name: voting-app
-  namespace: voting-app
+  namespace: production
 
 spec:
   replicas: 2

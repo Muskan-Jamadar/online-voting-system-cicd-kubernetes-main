@@ -3,7 +3,7 @@ kind: Service
 
 metadata:
   name: voting-app-service
-  namespace: voting-app
+  namespace: production
 
 spec:
   selector:
