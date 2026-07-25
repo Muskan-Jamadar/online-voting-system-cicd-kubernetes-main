@@ -14,7 +14,7 @@ pipeline {
 
         DOCKER_IMAGE = "jamadar21/vote"
 
-        DOCKER_CREDENTIALS = "dockerhub-creds"
+        DOCKER_CREDENTIALS = "dockerhub-credss"
     }
 
 
@@ -106,7 +106,7 @@ pipeline {
             steps {
 
 withCredentials([usernamePassword(
-    credentialsId: 'dockerhub-creds',
+    credentialsId: 'dockerhub-credss',
     usernameVariable: 'DOCKER_USER',
     passwordVariable: 'DOCKER_PASS'
 )]) {
