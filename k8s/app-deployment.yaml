@@ -25,7 +25,7 @@ spec:
         image: jamadar21/vote:latest
 
         ports:
-        - containerPort: 8080
+        - containerPort: 8085
 
         env:
 
