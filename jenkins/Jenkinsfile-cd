@@ -2,104 +2,93 @@ pipeline {
 
     agent any
 
-
     environment {
-
-        DOCKER_IMAGE = "jamadar21/vote:latest"
-
         K8S_PATH = "k8s"
-
     }
-
 
     stages {
 
-
-        stage('Checkout Kubernetes Files') {
-
+        stage('Checkout Kubernetes Repository') {
             steps {
-
-                git(
-                    url: 'https://github.com/Muskan-Jamadar/online-voting-system-cicd-kubernetes.git',
-                    branch: 'main'
-                )
-
+                git branch: 'main',
+                    url: 'https://github.com/Muskan-Jamadar/online-voting-system-cicd-kubernetes-main.git'
             }
-
         }
 
+        stage('Deploy Namespace') {
+            steps {
+                sh '''
+                kubectl apply -f ${K8S_PATH}/namespace.yaml
+                '''
+            }
+        }
+
+        stage('Deploy Secret') {
+            steps {
+                sh '''
+                kubectl apply -f ${K8S_PATH}/secret.yaml
+                '''
+            }
+        }
+
+        stage('Deploy Storage') {
+            steps {
+                sh '''
+                kubectl apply -f ${K8S_PATH}/pv.yaml
+                kubectl apply -f ${K8S_PATH}/pvc.yaml
+                '''
+            }
+        }
 
         stage('Deploy MySQL') {
-
             steps {
-
                 sh '''
-
-                kubectl apply -f ${K8S_PATH}/mysql-deployment.yaml
-
+                kubectl apply -f ${K8S_PATH}/mysql-statefulset.yaml
                 kubectl apply -f ${K8S_PATH}/mysql-service.yaml
-
                 '''
-
             }
-
         }
 
-
-        stage('Deploy Application') {
-
+        stage('Deploy Voting Application') {
             steps {
-
                 sh '''
-
                 kubectl apply -f ${K8S_PATH}/app-deployment.yaml
-
                 kubectl apply -f ${K8S_PATH}/app-service.yaml
-
                 '''
-
             }
-
         }
-
 
         stage('Verify Deployment') {
-
             steps {
-
                 sh '''
+                echo "Pods"
+                kubectl get pods -n production
 
-                kubectl get pods
+                echo "Services"
+                kubectl get svc -n production
 
-                kubectl get services
-
+                echo "Deployments"
+                kubectl get deployments -n production
                 '''
-
             }
-
         }
-
-
     }
-
 
     post {
 
-
         success {
-
-            echo "CD Pipeline Completed Successfully - Application Deployed"
-
+            echo 'CD Pipeline Completed Successfully'
         }
-
 
         failure {
-
-            echo "CD Pipeline Failed"
-
+            echo 'CD Pipeline Failed'
         }
 
-
+        always {
+            sh '''
+            kubectl get pods -n production || true
+            kubectl get svc -n production || true
+            '''
+        }
     }
-
 }
