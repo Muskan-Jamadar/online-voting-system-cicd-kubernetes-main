@@ -1,0 +1,164 @@
+pipeline {
+
+    agent any
+
+
+    tools {
+        maven 'maven'
+    }
+
+
+    environment {
+
+        APP_NAME = "voting-app"
+
+        DOCKER_IMAGE = "jamadar21/vote"
+
+        DOCKER_CREDENTIALS = "dockerhub-creds"
+    }
+
+
+
+    stages {
+
+
+        stage('Clean Workspace') {
+
+            steps {
+
+                deleteDir()
+
+            }
+        }
+
+
+
+        stage('Checkout Code') {
+
+            steps {
+
+                git branch: 'main',
+                    url: 'https://github.com/Muskan-Jamadar/online-voting-system-cicd-kubernetes.git'
+
+            }
+        }
+
+
+
+        stage('Check Files') {
+
+            steps {
+
+                sh '''
+                ls -la
+                '''
+
+            }
+        }
+
+
+
+        stage('Maven Build') {
+
+            steps {
+
+                sh '''
+                mvn clean package -DskipTests
+                '''
+
+            }
+        }
+
+
+
+
+        stage('Docker Build') {
+
+            steps {
+
+                sh '''
+                docker build -t ${DOCKER_IMAGE}:latest .
+                '''
+
+            }
+        }
+
+
+
+
+        stage('Check Docker Image') {
+
+            steps {
+
+                sh '''
+                docker images | grep vote
+                '''
+
+            }
+        }
+
+
+
+
+
+        stage('Docker Login') {
+
+            steps {
+
+withCredentials([usernamePassword(
+    credentialsId: 'dockerhub-creds',
+    usernameVariable: 'DOCKER_USER',
+    passwordVariable: 'DOCKER_PASS'
+)]) {
+    sh '''
+    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+    docker push jamadar21/vote:latest
+    '''
+}
+
+            }
+        }
+
+
+
+
+
+       
+
+
+
+
+        stage('Docker Logout') {
+
+            steps {
+
+                sh '''
+                docker logout
+                '''
+
+            }
+        }
+
+
+    }
+
+
+
+    post {
+
+        success {
+
+            echo "CI Pipeline Completed Successfully - jamadar21/vote pushed"
+
+        }
+
+
+        failure {
+
+            echo "CI Pipeline Failed"
+
+        }
+
+    }
+
+}

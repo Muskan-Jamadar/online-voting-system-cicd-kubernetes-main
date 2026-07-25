@@ -1,0 +1,105 @@
+pipeline {
+
+    agent any
+
+
+    environment {
+
+        DOCKER_IMAGE = "jamadar21/vote:latest"
+
+        K8S_PATH = "k8s"
+
+    }
+
+
+    stages {
+
+
+        stage('Checkout Kubernetes Files') {
+
+            steps {
+
+                git(
+                    url: 'https://github.com/Muskan-Jamadar/online-voting-system-cicd-kubernetes.git',
+                    branch: 'main'
+                )
+
+            }
+
+        }
+
+
+        stage('Deploy MySQL') {
+
+            steps {
+
+                sh '''
+
+                kubectl apply -f ${K8S_PATH}/mysql-deployment.yaml
+
+                kubectl apply -f ${K8S_PATH}/mysql-service.yaml
+
+                '''
+
+            }
+
+        }
+
+
+        stage('Deploy Application') {
+
+            steps {
+
+                sh '''
+
+                kubectl apply -f ${K8S_PATH}/app-deployment.yaml
+
+                kubectl apply -f ${K8S_PATH}/app-service.yaml
+
+                '''
+
+            }
+
+        }
+
+
+        stage('Verify Deployment') {
+
+            steps {
+
+                sh '''
+
+                kubectl get pods
+
+                kubectl get services
+
+                '''
+
+            }
+
+        }
+
+
+    }
+
+
+    post {
+
+
+        success {
+
+            echo "CD Pipeline Completed Successfully - Application Deployed"
+
+        }
+
+
+        failure {
+
+            echo "CD Pipeline Failed"
+
+        }
+
+
+    }
+
+}
